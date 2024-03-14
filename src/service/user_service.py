@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from asyncpg import UniqueViolationError
 from fastapi import Depends
 from sqlalchemy.exc import IntegrityError
@@ -8,7 +6,7 @@ from domain.user.schema import UserIn, UserOut, GetUserById
 from domain.user.user_repository import UserRepository
 from infrastructure.database.models import User
 from infrastructure.exceptions.user_exceptions import UserAlreadyExist, UserNotFound
-from service.auth_handler import AuthHandler
+from infrastructure.utils.auth_utils.auth_handler import AuthHandler
 
 
 class UserService:

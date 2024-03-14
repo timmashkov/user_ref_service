@@ -16,7 +16,7 @@ class ReferralRepository:
     async def get_all(self):
         stmt = select(self.model).order_by(self.model.created_at)
         answer = await self.session.execute(stmt)
-        result = answer.mappings().all()
+        result = answer.scalars().all()
         return list(result)
 
     async def get_referral(self, cmd: GetReferralById) -> ReferralOut | None:

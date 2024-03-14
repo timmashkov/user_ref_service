@@ -11,6 +11,7 @@ class GetUserById(BaseModel):
 
 class GetUserByLogin(BaseModel):
     login: str
+    password: str
 
 
 class UserOutList(GetUserById, GetUserByLogin):

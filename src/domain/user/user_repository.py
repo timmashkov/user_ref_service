@@ -10,7 +10,7 @@ from domain.user.schema import (
     UserIn,
     UserToken,
     UserJwtToken,
-    UserOutList,
+    GetUserByLogin,
 )
 from infrastructure.database.models import User
 from infrastructure.database.session import vortex
@@ -31,6 +31,12 @@ class UserRepository:
 
     async def get_user_by_id(self, cmd: GetUserById) -> UserOut | None:
         stmt = select(self.model).where(self.model.id == cmd.id)
+        answer = await self.session.execute(stmt)
+        result = answer.scalar_one_or_none()
+        return result
+
+    async def get_user_by_login(self, cmd: GetUserByLogin) -> UserOut | None:
+        stmt = select(self.model).where(self.model.login == cmd.login)
         answer = await self.session.execute(stmt)
         result = answer.scalar_one_or_none()
         return result
