@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 from domain.user.schema import (
     UserOut,
@@ -11,6 +12,7 @@ from domain.user.schema import (
     UserToken,
     UserJwtToken,
     GetUserByLogin,
+    UserWithRef,
 )
 from infrastructure.database.models import User
 from infrastructure.database.session import vortex
@@ -91,6 +93,16 @@ class UserRepository:
         answer = await self.session.execute(stmt)
         await self.session.commit()
         result = answer.mappings().first()
+        return result
+
+    async def get_user_with_ref(self, cmd: GetUserById) -> UserWithRef | None:
+        stmt = (
+            select(self.model)
+            .options(joinedload(self.model.ref_link))
+            .where(self.model.id == cmd.id)
+        )
+        answer = await self.session.execute(stmt)
+        result = answer.unique().scalar_one_or_none()
         return result
 
 

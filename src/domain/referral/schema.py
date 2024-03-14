@@ -23,4 +23,4 @@ class ReferralOut(GetReferralById, ReferralIn):
 
     @field_validator("last_time")
     def show_time(cls, data):
-        return f"{int(float(data)) // 3600} days"
+        return int(float(data)) // 3600

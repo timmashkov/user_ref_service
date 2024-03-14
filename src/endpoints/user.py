@@ -3,7 +3,14 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status, Security
 from fastapi.security import HTTPAuthorizationCredentials
 
-from domain.user.schema import UserOut, GetUserById, UserIn, UserOutList, GetUserByLogin
+from domain.user.schema import (
+    UserOut,
+    GetUserById,
+    UserIn,
+    UserOutList,
+    GetUserByLogin,
+    UserWithRef,
+)
 from infrastructure.utils.auth_utils.token_helper import jwt_header
 from service.auth_service import AuthService
 from service.user_service import UserService
@@ -16,6 +23,18 @@ async def show_users(
     user_repo: UserService = Depends(UserService),
 ) -> list[UserOutList]:
     return await user_repo.get_users()
+
+
+@user_router.get("/ref/{user_id}", response_model=UserWithRef)
+async def show_user_with_ref(
+    user_id: UUID,
+    user_repo: UserService = Depends(UserService),
+    credentials: HTTPAuthorizationCredentials = Security(jwt_header),
+) -> UserWithRef:
+    token = credentials.credentials
+    return await user_repo.get_user_with_referral(
+        cmd=GetUserById(id=user_id), token=token
+    )
 
 
 @user_router.get("/{user_id}", response_model=UserOut)
@@ -34,16 +53,25 @@ async def registration(
 
 @user_router.patch("/upd/{user_id}", response_model=UserOut)
 async def update_user(
-    user_id: UUID, cmd: UserIn, user_repo: UserService = Depends(UserService)
+    user_id: UUID,
+    cmd: UserIn,
+    user_repo: UserService = Depends(UserService),
+    credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> UserOut:
-    return await user_repo.change_user(cmd=GetUserById(id=user_id), data=cmd)
+    token = credentials.credentials
+    return await user_repo.change_user(
+        cmd=GetUserById(id=user_id), data=cmd, token=token
+    )
 
 
 @user_router.delete("/del/{user_id}", response_model=UserOut)
 async def delete_user(
-    user_id: UUID, user_repo: UserService = Depends(UserService)
+    user_id: UUID,
+    user_repo: UserService = Depends(UserService),
+    credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> UserOut:
-    return await user_repo.drop_user(cmd=GetUserById(id=user_id))
+    token = credentials.credentials
+    return await user_repo.drop_user(cmd=GetUserById(id=user_id), token=token)
 
 
 @user_router.post("/login")
@@ -60,3 +88,13 @@ async def logout_user(
 ):
     token = credentials.credentials
     return await auth_service.logout(token=token)
+
+
+@user_router.post("/email")
+async def email(
+    cmd: GetUserById,
+    user_repo: UserService = Depends(UserService),
+    credentials: HTTPAuthorizationCredentials = Security(jwt_header),
+):
+    token = credentials.credentials
+    return await user_repo.email_send(cmd=cmd, token=token)

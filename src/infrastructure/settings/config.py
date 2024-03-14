@@ -30,6 +30,9 @@ class ServerConfig(BaseSettings):
     def get_redis_url(self):
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
 
+    GOOGLE_PASS: str = os.getenv("GOOGLE_PASS")
+    MAIL_FROM: str = os.getenv("MAIL_FROM")
+
     class Config:
         env_file = ".env"
 

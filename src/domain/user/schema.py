@@ -1,7 +1,10 @@
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
+
+from domain.referral.schema import ReferralOut
 
 
 # User schemas
@@ -27,6 +30,10 @@ class UserIn(GetUserByLogin):
 
 class UserOut(UserOutList):
     pass
+
+
+class UserWithRef(UserOut):
+    ref_link: ReferralOut | None
 
 
 # Token Schemas
