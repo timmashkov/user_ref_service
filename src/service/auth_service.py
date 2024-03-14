@@ -7,6 +7,7 @@ from domain.user.schema import (
     UserJwtToken,
 )
 from domain.user.user_repository import UserTokenRepository, UserRepository
+from infrastructure.cache.redis_handler import CacheService
 from infrastructure.exceptions.auth_exceptions import Unauthorized
 from infrastructure.exceptions.user_exceptions import UserNotFound, WrongPassword
 from infrastructure.utils.auth_utils.auth_handler import AuthHandler
@@ -20,10 +21,13 @@ class AuthService:
         token_repository: UserTokenRepository = Depends(UserTokenRepository),
         user_repository: UserRepository = Depends(UserRepository),
         auth_repository: AuthHandler = Depends(AuthHandler),
+        cache_repo: CacheService = Depends(CacheService),
     ) -> None:
         self.token_repository = token_repository
         self.auth_repository = auth_repository
         self.user_repository = user_repository
+        self.cache_repo = cache_repo
+        self._key = str(self.__class__)
 
     async def login(self, data: GetUserByLogin) -> dict[str, str] | dict[str, Any]:
         user = await self.user_repository.get_user_by_login(cmd=data)
@@ -40,6 +44,7 @@ class AuthService:
             )
         except Exception as e:
             return {"error": e}
+        await self.cache_repo.create_cache(self._key, access_token)
         return access_token
 
     async def logout(self, token):
@@ -51,6 +56,7 @@ class AuthService:
             result = await self.token_repository.delete_token(
                 cmd=validate_uuid(user_id)
             )
+            await self.cache_repo.delete_cache(self._key)
             return result
         raise Unauthorized
 
@@ -61,6 +67,7 @@ class AuthService:
             raise Unauthorized
         try:
             if exist_token == refresh_token:
+                await self.cache_repo.read_cache(self._key)
                 return user_id
             else:
                 raise Unauthorized

@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from domain.user.schema import UserIn, UserOut, GetUserById, UserOutList, UserWithRef
 from domain.user.user_repository import UserRepository
+from infrastructure.cache.redis_handler import CacheService
 from infrastructure.database.models import User
 from infrastructure.exceptions.auth_exceptions import Unauthorized
 from infrastructure.exceptions.user_exceptions import UserAlreadyExist, UserNotFound
@@ -19,16 +20,26 @@ class UserService:
         user_repo: UserRepository = Depends(UserRepository),
         auth_repo: AuthHandler = Depends(AuthHandler),
         auth_service: AuthService = Depends(AuthService),
+        cache_repo: CacheService = Depends(CacheService),
     ) -> None:
         self.user_repo = user_repo
         self.auth_repo = auth_repo
         self.auth_service = auth_service
+        self.cache_repo = cache_repo
         self._key = str(self.__class__)
 
     async def add_user(self, data: UserIn) -> UserOut:
         try:
             salted_pass = self.auth_repo.encode_password(
                 password=data.password, salt=data.login
+            )
+            await self.cache_repo.create_cache(
+                self._key,
+                UserIn(
+                    login=data.login,
+                    password=salted_pass,
+                    email=data.email,
+                ),
             )
             answer = await self.user_repo.create_user(
                 data=UserIn(
@@ -43,11 +54,13 @@ class UserService:
 
     async def get_users(self) -> list[UserOutList]:
         answer = await self.user_repo.get_all()
+        await self.cache_repo.read_cache(self._key)
         return answer
 
     async def get_user(self, cmd: GetUserById) -> UserOut:
         answer = await self.user_repo.get_user_by_id(cmd=cmd)
         if answer:
+            await self.cache_repo.read_cache(self._key)
             return answer
         raise UserNotFound
 
@@ -56,6 +69,7 @@ class UserService:
         if not token:
             raise Unauthorized
         if await self.user_repo.get_user_by_id(cmd=cmd):
+            await self.cache_repo.create_cache(self._key, data)
             answer = await self.user_repo.update_user(data=data, cmd=cmd)
             return answer
         raise UserNotFound
@@ -65,6 +79,7 @@ class UserService:
         if not token:
             raise Unauthorized
         if await self.user_repo.get_user_by_id(cmd=cmd):
+            await self.cache_repo.delete_cache(self._key)
             answer = await self.user_repo.delete_user(cmd=cmd)
             return answer
         raise UserNotFound
