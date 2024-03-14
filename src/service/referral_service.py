@@ -14,6 +14,10 @@ from service.auth_service import AuthService
 
 
 class ReferralService:
+    """
+    Сервисный репо для работы с реф. кодом
+    """
+
     def __init__(
         self,
         repository: ReferralRepository = Depends(ReferralRepository),

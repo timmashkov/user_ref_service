@@ -15,6 +15,12 @@ async def show_refs(
     ref_repo: ReferralService = Depends(ReferralService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> list[ReferralOut]:
+    """
+    Возвращает список все реферальных кодов
+    :param ref_repo:
+    :param credentials:
+    :return: ref_repo.get_all_referrals(token=token)
+    """
     token = credentials.credentials
     return await ref_repo.get_all_referrals(token=token)
 
@@ -25,6 +31,13 @@ async def find_ref(
     ref_repo: ReferralService = Depends(ReferralService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> ReferralOut:
+    """
+    Возвращает код по айди
+    :param ref_id:
+    :param ref_repo:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await ref_repo.get_referral(cmd=GetReferralById(id=ref_id), token=token)
 
@@ -37,6 +50,13 @@ async def add_ref(
     ref_repo: ReferralService = Depends(ReferralService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> ReferralOut:
+    """
+    Создание реф. кода
+    :param cmd:
+    :param ref_repo:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await ref_repo.add_referral(cmd=cmd, token=token)
 
@@ -48,6 +68,14 @@ async def update_ref(
     ref_repo: ReferralService = Depends(ReferralService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> ReferralOut:
+    """
+    Редактирование реф. кода
+    :param ref_id:
+    :param cmd:
+    :param ref_repo:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await ref_repo.upd_referral(
         data=GetReferralById(id=ref_id), cmd=cmd, token=token
@@ -60,5 +88,12 @@ async def delete_ref(
     ref_repo: ReferralService = Depends(ReferralService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> ReferralOut:
+    """
+    Удаление реф. кода
+    :param ref_id:
+    :param ref_repo:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await ref_repo.del_referral(cmd=GetReferralById(id=ref_id), token=token)

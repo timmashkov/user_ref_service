@@ -15,6 +15,9 @@ from infrastructure.utils.auth_utils.auth_helper import validate_uuid
 
 
 class AuthService:
+    """
+    Сервисный репо авторизации\аутентификации
+    """
 
     def __init__(
         self,

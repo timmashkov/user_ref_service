@@ -14,6 +14,9 @@ from service.auth_service import AuthService
 
 
 class UserService:
+    """
+    Сервисный репо для работы с юзером
+    """
 
     def __init__(
         self,

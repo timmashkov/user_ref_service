@@ -22,6 +22,11 @@ user_router = APIRouter(prefix="/users")
 async def show_users(
     user_repo: UserService = Depends(UserService),
 ) -> list[UserOutList]:
+    """
+    Возвращает список юзеров
+    :param user_repo:
+    :return:
+    """
     return await user_repo.get_users()
 
 
@@ -31,6 +36,13 @@ async def show_user_with_ref(
     user_repo: UserService = Depends(UserService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> UserWithRef:
+    """
+    Возвращает юзера вместе с реф. кодом
+    :param user_id:
+    :param user_repo:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await user_repo.get_user_with_referral(
         cmd=GetUserById(id=user_id), token=token
@@ -41,6 +53,12 @@ async def show_user_with_ref(
 async def find_user(
     user_id: UUID, user_repo: UserService = Depends(UserService)
 ) -> UserOut:
+    """
+    Поиск юзера по айди
+    :param user_id:
+    :param user_repo:
+    :return:
+    """
     return await user_repo.get_user(cmd=GetUserById(id=user_id))
 
 
@@ -48,6 +66,12 @@ async def find_user(
 async def registration(
     cmd: UserIn, user_repo: UserService = Depends(UserService)
 ) -> UserOut:
+    """
+    Создание юзера
+    :param cmd:
+    :param user_repo:
+    :return:
+    """
     return await user_repo.add_user(data=cmd)
 
 
@@ -58,6 +82,14 @@ async def update_user(
     user_repo: UserService = Depends(UserService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> UserOut:
+    """
+    Редактирование юзера
+    :param user_id:
+    :param cmd:
+    :param user_repo:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await user_repo.change_user(
         cmd=GetUserById(id=user_id), data=cmd, token=token
@@ -70,6 +102,13 @@ async def delete_user(
     user_repo: UserService = Depends(UserService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ) -> UserOut:
+    """
+    Удаление юзера
+    :param user_id:
+    :param user_repo:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await user_repo.drop_user(cmd=GetUserById(id=user_id), token=token)
 
@@ -78,6 +117,12 @@ async def delete_user(
 async def login_user(
     auth_in: GetUserByLogin, auth_service: AuthService = Depends(AuthService)
 ):
+    """
+    Логин
+    :param auth_in:
+    :param auth_service:
+    :return:
+    """
     return await auth_service.login(data=auth_in)
 
 
@@ -86,6 +131,12 @@ async def logout_user(
     auth_service: AuthService = Depends(AuthService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ):
+    """
+    Логаут
+    :param auth_service:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await auth_service.logout(token=token)
 
@@ -96,5 +147,12 @@ async def email(
     user_repo: UserService = Depends(UserService),
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ):
+    """
+    Отправка письма на почту юзера
+    :param cmd:
+    :param user_repo:
+    :param credentials:
+    :return:
+    """
     token = credentials.credentials
     return await user_repo.email_send(cmd=cmd, token=token)
