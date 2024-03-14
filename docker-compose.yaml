@@ -1,0 +1,48 @@
+version: "3.7"
+services:
+  task_db:
+    image: postgres:latest
+    container_name: task_db
+    command: postgres -p 5121
+    expose:
+      - 5121
+    env_file:
+      - .env_prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p 5121"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    expose:
+      - 5370
+    ports:
+      - "5370:5370"
+    env_file:
+      - .env_prod
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  task_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env_prod
+    container_name: task_app
+    command: sh -c "chmod +x /user_ref_service/docker/start_app.sh && /user_ref_service/docker/start_app.sh"
+    ports:
+      - "5555:5555"
+    depends_on:
+      task_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
