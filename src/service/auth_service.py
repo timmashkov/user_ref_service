@@ -5,8 +5,6 @@ from fastapi import Depends
 from domain.user.schema import (
     GetUserByLogin,
     UserJwtToken,
-    GetUserById,
-    UserRefreshToken,
 )
 from domain.user.user_repository import UserTokenRepository, UserRepository
 from infrastructure.exceptions.auth_exceptions import Unauthorized
@@ -35,23 +33,21 @@ class AuthService:
             data.password, data.login, user.password
         ):
             raise WrongPassword
-        access_token = self.auth_repository.encode_token(user.id)
-        refresh_token = self.auth_repository.encode_refresh_token(user.id)
+        access_token = self.auth_repository.encode_refresh_token(user.id)
         try:
             await self.token_repository.update_token(
-                data=UserJwtToken(id=user.id, token=refresh_token)
+                data=UserJwtToken(id=user.id, token=access_token)
             )
         except Exception as e:
             return {"error": e}
-        tokens = {"access_token": access_token, "refresh_token": refresh_token}
-        return tokens
+        return access_token
 
-    async def logout(self, refresh_token):
-        user_id = self.auth_repository.decode_refresh_token(refresh_token)
+    async def logout(self, token):
+        user_id = self.auth_repository.decode_refresh_token(token)
         token = await self.token_repository.get_token(cmd=validate_uuid(user_id))
         if not token:
             raise Unauthorized
-        if token == refresh_token:
+        if token == token:
             result = await self.token_repository.delete_token(
                 cmd=validate_uuid(user_id)
             )
@@ -65,31 +61,8 @@ class AuthService:
             raise Unauthorized
         try:
             if exist_token == refresh_token:
-                return GetUserById(id=user_id)
+                return user_id
             else:
                 raise Unauthorized
         except AttributeError:
             raise Unauthorized
-
-    async def refresh_token(self, refresh_token):
-        user_id = self.auth_repository.decode_refresh_token(refresh_token)
-        exist_token = await self.token_repository.get_token(cmd=validate_uuid(user_id))
-        if not exist_token:
-            raise Unauthorized
-        else:
-            if exist_token == refresh_token:
-                new_token = self.auth_repository.refresh_token(
-                    refresh_token=refresh_token
-                )
-                await self.token_repository.update_token(
-                    data=UserJwtToken(
-                        id=validate_uuid(user_id),
-                        token=new_token.refresh_token,
-                    )
-                )
-                return UserRefreshToken(
-                    access_token=new_token.access_token,
-                    refresh_token=new_token.refresh_token,
-                )
-            else:
-                raise Unauthorized

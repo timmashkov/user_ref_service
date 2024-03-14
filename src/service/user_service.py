@@ -2,7 +2,7 @@ from asyncpg import UniqueViolationError
 from fastapi import Depends
 from sqlalchemy.exc import IntegrityError
 
-from domain.user.schema import UserIn, UserOut, GetUserById
+from domain.user.schema import UserIn, UserOut, GetUserById, UserOutList
 from domain.user.user_repository import UserRepository
 from infrastructure.database.models import User
 from infrastructure.exceptions.user_exceptions import UserAlreadyExist, UserNotFound
@@ -36,7 +36,7 @@ class UserService:
         except (UniqueViolationError, IntegrityError):
             raise UserAlreadyExist
 
-    async def get_users(self) -> list[User]:
+    async def get_users(self) -> list[UserOutList]:
         answer = await self.user_repo.get_all()
         return answer
 

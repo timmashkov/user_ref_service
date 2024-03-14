@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, status, Security
 from fastapi.security import HTTPAuthorizationCredentials
 
 from domain.user.schema import UserOut, GetUserById, UserIn, UserOutList, GetUserByLogin
-from infrastructure.database.models import User
 from infrastructure.utils.auth_utils.token_helper import jwt_header
 from service.auth_service import AuthService
 from service.user_service import UserService
@@ -13,7 +12,9 @@ user_router = APIRouter(prefix="/users")
 
 
 @user_router.get("/all", response_model=list[UserOutList])
-async def show_users(user_repo: UserService = Depends(UserService)) -> list[User]:
+async def show_users(
+    user_repo: UserService = Depends(UserService),
+) -> list[UserOutList]:
     return await user_repo.get_users()
 
 
@@ -58,22 +59,4 @@ async def logout_user(
     credentials: HTTPAuthorizationCredentials = Security(jwt_header),
 ):
     token = credentials.credentials
-    return await auth_service.logout(refresh_token=token)
-
-
-@user_router.get("/refresh_token")
-async def refresh_user_token(
-    auth_service: AuthService = Depends(AuthService),
-    credentials: HTTPAuthorizationCredentials = Security(jwt_header),
-):
-    token = credentials.credentials
-    return await auth_service.refresh_token(refresh_token=token)
-
-
-@user_router.get("/check_auth")
-async def check_auth(
-    auth_service: AuthService = Depends(AuthService),
-    credentials: HTTPAuthorizationCredentials = Security(jwt_header),
-):
-    token = credentials.credentials
-    return await auth_service.is_auth(refresh_token=token)
+    return await auth_service.logout(token=token)

@@ -14,7 +14,8 @@ class GetUserByLogin(BaseModel):
     password: str
 
 
-class UserOutList(GetUserById, GetUserByLogin):
+class UserOutList(GetUserById):
+    login: str
     email: EmailStr
     created_at: datetime
 

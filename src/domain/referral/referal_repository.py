@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlalchemy import select, insert, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.referral.schema import ReferralOut, GetReferralById, ReferralIn
+from domain.referral.schema import ReferralOut, GetReferralById, ReferralIn, ReferralUpd
 from infrastructure.database.models import Referral
 from infrastructure.database.session import vortex
 
@@ -45,7 +45,7 @@ class ReferralRepository:
         return result
 
     async def update_referral(
-        self, cmd: ReferralIn, data: GetReferralById
+        self, cmd: ReferralUpd, data: GetReferralById
     ) -> ReferralOut | None:
         stmt = (
             update(self.model)

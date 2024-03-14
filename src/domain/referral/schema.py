@@ -8,9 +8,12 @@ class GetReferralById(BaseModel):
     id: UUID
 
 
-class ReferralIn(BaseModel):
+class ReferralUpd(BaseModel):
     code: str
     exp_date: date
+
+
+class ReferralIn(ReferralUpd):
     user_id: UUID
 
 
